@@ -52,5 +52,121 @@ Now we'll discuss the differences between Passive Reinforcement Learning (PRL) a
 \end{itemize}
 
 
+\section*{Problem 2}
+
+Given the following simple documents:
+
+\begin{itemize}
+    \item Document 1 - "The cat chased a rat"
+    \item Document 2 - "A big rat chased the big dog"
+\end{itemize}
+
+\noindent ...generate the two document vectors by using several methods.
+
+\subsection*{Bag of words}
+
+\begin{center}
+    \begin{tabular}{ l c c c c c c c }
+        Document & the & cat & chased & a & rat & big & dog \\
+        Document 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 \\
+        Document 2 & 1 & 0 & 1 & 1 & 1 & 1 & 1 
+    \end{tabular}
+\end{center}
+
+\subsection*{Bag of 2-grams}
+
+\begin{center}
+    \begin{tabular}{ l c c c c c c c c c c }
+        Document & the cat & cat chased & chased a & a rat & a big & big rat & rat chased & chased the & the big & big dog \\
+        Document 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        Document 2 & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1\\ 
+    \end{tabular}
+\end{center}
+
+\subsection*{Bag of 3-grams}
+
+\begin{center}
+    \begin{tabular}{ l c c c c c c c }
+        Doc & the cat chased & cat chased a & chased a rat & a big rat & big rat chased & chased the big & the big dog\\
+        Doc 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0\\
+        Doc 2 & 0 & 0 & 0 & 1 & 1 & 1 & 1\\
+    \end{tabular}
+\end{center}
+
+\subsection*{TF-IDF}
+
+\noindent ...where we will be using the following equation:
+
+\begin{equation}
+    w_{i,j} = tf_{i,j} \times \log{\frac{N}{df_i}}
+\end{equation}
+
+\noindent ...where $tf{i,j}$ is the number of occurences of $i$ in $j$, $df_i$ is the number of documents containing $i$, and $N$ is the total number of documents.
+
+\begin{center}
+    \begin{tabular}{ l c c c c c c c }
+        Document & the & cat & chased & a & rat & big & dog \\
+        Document 1 & 0.0 & 0.060 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 \\
+        Document 2 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & 0.086 & 0.043\\
+    \end{tabular}
+\end{center}
+
+\noindent ...with the only non-zero calculations being for cat, big, and dog, respectively:
+
+\begin{equation}
+    cat \rightarrow \frac{1}{5} \times \log{\frac{2}{1}} = 0.060
+\end{equation}
+
+\begin{equation}
+    big \rightarrow \frac{2}{7} \times \log{\frac{2}{1}} = 0.086
+\end{equation}
+
+\begin{equation}
+    dog \rightarrow \frac{1}{7} \times \log{\frac{2}{1}} = 0.043
+\end{equation}
+
+\subsection*{Part A}
+
+Now we aim to compute the cosine of similarity using each of the above text vectorization methods. To do this, we are solving the equation of:
+
+\begin{equation}
+    similarity(doc_1, doc_2) = \cos(\theta) = \frac{doc_1 doc_2}{\lvert doc_1 \rvert \lvert doc_2 \rvert} = \frac{\sum^n_{i=1} A_i B_i}{\sqrt{\sum^{n}_{i=1} A^2_i} \sqrt{\sum^n_{i=1} B^2_i}}
+\end{equation}
+
+\noindent First we shall look at bag of words:
+
+\begin{equation}
+    A \cdot B = \sum^n_{i=1} A_i B_i = (1*1) + (1*0) + (1*1) + (1*1) + (1*1) + (0*1) + (0*1) = 4
+\end{equation}
+
+\begin{equation}
+    \sqrt{\sum^n_{i=1} A_i^2 } = \sqrt{1 + 1 + 1 + 1 + 1 + 0 + 0} = \sqrt{5} = 2.24
+\end{equation}
+
+\begin{equation}
+    \sqrt{\sum^n_{i=1} B_i^2 } = \sqrt{1 + 0 + 1 + 1 + 1 + 1 + 1} = \sqrt{6} = 2.45
+\end{equation}
+
+\begin{equation}
+    \frac{\sum^n_{i=1} A_i B_i}{\sqrt{\sum^{n}_{i=1} A^2_i} \sqrt{\sum^n_{i=1} B^2_i}} = \frac{4}{2.24 \cdot 2.45} = 0.73
+\end{equation}
+
+\noindent Then we move onto the cosine of similarity for our 2-gram approach.
+
+\begin{equation}
+    A \cdot B = \sum^n_{i=1} A_i B_i = (1*0) + (1*0) + (1*0) + (1*0) + (1*0) + (0*1) + (0*1) + (0*1) + (0*1) + (0*1) = 0
+\end{equation}
+
+\noindent Since we know the numerator will be $0$, we can stop here - the similarity will be $0$. Moving onto our 3-gram:
+
+\begin{equation}
+    A \cdot B = \sum^n_{i=1} A_i B_i = (1*0) + (1*0) + (1*0) + (0*1) + (0*1) + (0*1) + (0*1) = 0
+\end{equation}
+
+\noindent Once again we see no similarity due to lack of overlap from the 3-gram approach.
+
+\noindent Finally we shall look at cosine of similarity for our TF-IDF vectorization:
+
+
 
 \end{document}
