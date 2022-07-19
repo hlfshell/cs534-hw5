@@ -1,5 +1,4 @@
 from time import perf_counter
-from tkinter import HIDDEN
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, random_split
@@ -9,6 +8,9 @@ from math import floor
 from torchtext.data import get_tokenizer
 from torch.optim import Adam
 import torch.nn.functional as F
+from tqdm import tqdm
+from sklearn.metrics import accuracy_score
+
 
 
 VOCAB_PATH = "./vocab.pth"
@@ -87,21 +89,29 @@ class RNNReviewNetwork(nn.Module):
         # Create the RNN network - HIDDEN_DIMENSION neurons wide
         # for each hidden layer, for NUMBER_OF_LAYERS long. Input
         # size is the max word size of the dataset
-        self.rnn = nn.RNN(
-            input_size=MAX_WORDS,
-            hidden_size=HIDDEN_DIMENSION,
-            num_layers=NUMBER_OF_LAYERS,
-            batch_first=True
+        self.rnn1 = nn.RNN(
+            input_size = MAX_WORDS,
+            hidden_size = HIDDEN_DIMENSION,
+            num_layers = NUMBER_OF_LAYERS,
+            batch_first = True
+        )
+        self.rnn2 = nn.RNN(
+            input_size = HIDDEN_DIMENSION,
+            hidden_size = HIDDEN_DIMENSION,
+            num_layers = NUMBER_OF_LAYERS,
+            batch_first = True
         )
         # Final output layer is just a score 1-5, so we treat them as categories
         self.linear = nn.Linear(HIDDEN_DIMENSION, 5)
 
-    def forward(self, X_batch):
-        embeddings = self.embedding_layer(X_batch)
-        output, hidden = self.rnn(
+    def forward(self, batch):
+        embeddings = self.embedding_layer(batch)
+        output, hidden = self.rnn1(
             embeddings,
-            torch.randn(NUMBER_OF_LAYERS, len(X_batch), HIDDEN_DIMENSION)
+            # torch.randn(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
+            torch.zeros(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
         )
+        self.rnn2(output, hidden)
         return self.linear(output[:,-1])
 
 review_model = RNNReviewNetwork()
@@ -133,7 +143,7 @@ for i in range(0, epochs):
     for X, Y in train_loader:
         batch_start = perf_counter()
 
-        Y_preds = review_model(X)
+        Y_preds = review_model(X).softmax(dim=1)
 
         loss = loss_fn(Y_preds, Y)
         losses.append(loss.item())
@@ -154,3 +164,23 @@ for i in range(0, epochs):
 
     print(f"Epoch {i + 1} complete. Took {perf_counter() - epoch_start}s")
     print("Train Loss : {:.3f}".format(torch.tensor(losses).mean()))
+
+    # Now we get validation stats
+    losses = []
+    with torch.no_grad():
+        Y_shuffled, Y_preds, losses = [],[],[]
+        for X, Y in test_loader:
+            preds = review_model(X)
+            loss = loss_fn(preds, Y)
+            losses.append(loss.item())
+
+            Y_shuffled.append(Y)
+            Y_preds.append(preds.argmax(dim=-1))
+
+        Y_shuffled = torch.cat(Y_shuffled)
+        Y_preds = torch.cat(Y_preds)
+
+        print("Validation Loss : {:.3f}".format(torch.tensor(losses).mean()))
+        model_path = f"./model_rnn_{i+1}.pt"
+        print(f"Saving model to {model_path}")
+        # print("Validation Accuracy  : {:.3f}".format(accuracy_score(Y_shuffled.detach().numpy(), Y_preds.detach().numpy())))
