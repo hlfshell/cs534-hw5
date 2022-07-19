@@ -140,15 +140,15 @@ Now we aim to compute the cosine of similarity using each of the above text vect
 \end{equation}
 
 \begin{equation}
-    \sqrt{\sum^n_{i=1} A_i^2 } = \sqrt{1 + 1 + 1 + 1 + 1 + 0 + 0} = \sqrt{5} = 2.24
+    \sqrt{\sum^n_{i=1} A_i^2 } = \sqrt{1^2 + 1^2 + 1^2 + 1^2 + 1^2 + 0^2 + 0^2} = \sqrt{5} = 2.24
 \end{equation}
 
 \begin{equation}
-    \sqrt{\sum^n_{i=1} B_i^2 } = \sqrt{1 + 0 + 1 + 1 + 1 + 1 + 1} = \sqrt{6} = 2.45
+    \sqrt{\sum^n_{i=1} B_i^2 } = \sqrt{1^2 + 0 + 1^2 + 1^2 + 1^2 + 2^2 + 1^2} = \sqrt{9} = 3
 \end{equation}
 
 \begin{equation}
-    \frac{\sum^n_{i=1} A_i B_i}{\sqrt{\sum^{n}_{i=1} A^2_i} \sqrt{\sum^n_{i=1} B^2_i}} = \frac{4}{2.24 \cdot 2.45} = 0.73
+    \frac{\sum^n_{i=1} A_i B_i}{\sqrt{\sum^{n}_{i=1} A^2_i} \sqrt{\sum^n_{i=1} B^2_i}} = \frac{4}{2.24 \cdot 3} = 0.60
 \end{equation}
 
 \noindent Then we move onto the cosine of similarity for our 2-gram approach.
@@ -167,6 +167,31 @@ Now we aim to compute the cosine of similarity using each of the above text vect
 
 \noindent Finally we shall look at cosine of similarity for our TF-IDF vectorization:
 
+\begin{equation}
+    A \cdot B = \sum^n_{i=1} A_i B_i = (0.0 * 0.0) + (0.060 * 0.0) + (0.0 * 0.0) + (0.0 * 0.0) + (0.0 * 0.0) + (0.0 * 0.086) + (0.0 * 0.043) = 0.0
+\end{equation}
 
+\noindent ...and again, with a $0$ numerator, we are going to have a cosine of similarity of $0$.
+
+\subsection*{Part B}
+
+Now, utilizing what we learn from above, we're going to use SKLearn to create a Python program to analyse the following documents:
+
+\begin{itemize}
+    \item “Mr Jeremy put on a macintosh, and a pair of shiny shoes; he took his fishing rod and basket, and set off with enormous hops to the place where he kept his boat. The boat was round and green, and very like the other lily-leaves. It was tied to a water-plant in the middle of the pond.”
+    \item “Peter never stopped running or looked behind him till he got home to the big fir-tree. He was so tired that he flopped down upon the nice soft sand on the floor of the rabbit-hole and shut his eyes. His mother was busy cooking; she wondered what he had done with his clothes. It was the second little jacket and pair of shoes that Peter had lost in a week!"
+\end{itemize}
+
+With these documents, we will:
+
+\begin{itemize}
+    \item Pre-process the documents and then display the cleaned documents respectively on the output
+    \item Generate the two TF-IDF vectors respectively and then display the two TF-IDF vectors on the output
+    \item Compute their cosine similarity and display the value on the output
+\end{itemize}
+
+\noindent ...and finally discuss whether or not these documents are similar from those findings.
+
+To see the code, please reference \textbf{problem\_2.py}. There we use Scikit Learn to calculate the TF-IDF vectors and cosine of similarity. With a cosine of similarity of $0.44$, these documents are somewhat similar.
 
 \end{document}

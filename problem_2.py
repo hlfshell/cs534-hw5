@@ -41,5 +41,5 @@ print("----------------------------")
 print("Cosine of Similarity")
 print("----------------------------")
 
-similarity = cosine_similarity(X)
+similarity = cosine_similarity([X.toarray()[0]], [X.toarray()[1]])
 print(similarity)
