@@ -108,10 +108,10 @@ class RNNReviewNetwork(nn.Module):
         embeddings = self.embedding_layer(batch)
         output, hidden = self.rnn1(
             embeddings,
-            # torch.randn(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
-            torch.zeros(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
+            torch.randn(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
+            # torch.zeros(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
         )
-        self.rnn2(output, hidden)
+        output, hidden = self.rnn2(output, hidden)
         return self.linear(output[:,-1])
 
 review_model = RNNReviewNetwork()
@@ -144,6 +144,7 @@ for i in range(0, epochs):
         batch_start = perf_counter()
 
         Y_preds = review_model(X).softmax(dim=1)
+        # Y_preds = review_model(X)
 
         loss = loss_fn(Y_preds, Y)
         losses.append(loss.item())
@@ -170,12 +171,15 @@ for i in range(0, epochs):
     with torch.no_grad():
         Y_shuffled, Y_preds, losses = [],[],[]
         for X, Y in test_loader:
-            preds = review_model(X)
+            preds = review_model(X).softmax(dim=1)
             loss = loss_fn(preds, Y)
             losses.append(loss.item())
 
             Y_shuffled.append(Y)
-            Y_preds.append(preds.argmax(dim=-1))
+            # Y_preds.append(preds.argmax(dim=-1))
+            # Convert predictions to equivalent one hot prediction.
+            one_hot_predictions = F.one_hot(preds.argmax(dim=-1), num_classes=5).float()
+            Y_preds.append(one_hot_predictions)
 
         Y_shuffled = torch.cat(Y_shuffled)
         Y_preds = torch.cat(Y_preds)
@@ -183,4 +187,6 @@ for i in range(0, epochs):
         print("Validation Loss : {:.3f}".format(torch.tensor(losses).mean()))
         model_path = f"./model_rnn_{i+1}.pt"
         print(f"Saving model to {model_path}")
-        # print("Validation Accuracy  : {:.3f}".format(accuracy_score(Y_shuffled.detach().numpy(), Y_preds.detach().numpy())))
+        print(Y_shuffled.detach().numpy())
+        print(Y_preds.detach().numpy())
+        print("Validation Accuracy  : {:.3f}".format(accuracy_score(Y_shuffled.detach().numpy(), Y_preds.detach().numpy())))
