@@ -33,6 +33,10 @@ class VocabDataset(object):
         row = data.loc[index]
         summary = str(row["Summary"])
         score = row["Score"]
+        if score <= 2:
+            score = [0]
+        else:
+            score = [1]
 
         summary = summary.lower()
         summary = summary.translate(str.maketrans('','',string.punctuation))
@@ -60,9 +64,9 @@ def vectorize_batch(batch):
     X = [tokens + ([0]* (MAX_WORDS-len(tokens))) if len(tokens) < MAX_WORDS else tokens[:MAX_WORDS] for tokens in X]
 
     # One hot encode the score
-    Y = F.one_hot(torch.sub(torch.tensor(Y), 1), num_classes=5).float()
+    # Y = F.one_hot(torch.sub(torch.tensor(Y), 1), num_classes=5).float()
 
-    return torch.tensor(X, dtype=torch.int32), Y
+    return torch.tensor(X, dtype=torch.int32), torch.tensor(Y).float()
 
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, collate_fn=vectorize_batch, shuffle=True)
@@ -102,7 +106,8 @@ class RNNReviewNetwork(nn.Module):
             batch_first = True
         )
         # Final output layer is just a score 1-5, so we treat them as categories
-        self.linear = nn.Linear(HIDDEN_DIMENSION, 5)
+        self.linear1 = nn.Linear(HIDDEN_DIMENSION, 1)
+        self.relu = nn.ReLU()
 
     def forward(self, batch):
         embeddings = self.embedding_layer(batch)
@@ -112,7 +117,11 @@ class RNNReviewNetwork(nn.Module):
             # torch.zeros(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
         )
         output, hidden = self.rnn2(output, hidden)
-        return self.linear(output[:,-1])
+        output = self.linear1(output[:,-1])
+        output = self.linear1(output)
+        return output
+
+        # return self.linear(output[:,-1])
         # output = self.linear(output).long()
         # return output
 
@@ -166,7 +175,7 @@ for i in range(0, epochs):
             batch_durations = []
 
     print(f"Epoch {i + 1} complete. Took {perf_counter() - epoch_start}s")
-    print("Train Loss : {:.3f}".format(torch.tensor(losses).mean()))
+    print(f"Train Loss : {torch.tensor(losses).mean()}")
 
     # Now we get validation stats
     losses = []
@@ -178,10 +187,11 @@ for i in range(0, epochs):
             losses.append(loss.item())
 
             Y_shuffled.append(Y)
+            Y_preds.append(Y)
             # Y_preds.append(preds.argmax(dim=-1))
             # Convert predictions to equivalent one hot prediction.
-            one_hot_predictions = F.one_hot(preds.argmax(dim=-1), num_classes=5).float()
-            Y_preds.append(one_hot_predictions)
+            # one_hot_predictions = F.one_hot(preds.argmax(dim=-1), num_classes=5).float()
+            # Y_preds.append(one_hot_predictions)
 
         Y_shuffled = torch.cat(Y_shuffled)
         Y_preds = torch.cat(Y_preds)

@@ -10,6 +10,9 @@ from torch.optim import Adam
 import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
+from torch.autograd import Variable
+
+from problem_3_RNN import HIDDEN_DIMENSION, NUMBER_OF_LAYERS
 
 
 
@@ -68,15 +71,13 @@ def vectorize_batch(batch):
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, collate_fn=vectorize_batch, shuffle=True)
 test_loader  = DataLoader(test_dataset , batch_size=BATCH_SIZE, collate_fn=vectorize_batch)
 
-
-# Now finally we create our RNN class
 HIDDEN_DIMENSION = 2
-NUMBER_OF_LAYERS = 1
+NUMBER_OF_LAYERS = 3
 
-
-class RNNReviewNetwork(nn.Module):
+class LTSMReviewNetwork(nn.Module):
+    
     def __init__(self):
-        super(RNNReviewNetwork, self).__init__()
+        super(LTSMReviewNetwork, self).__init__()
 
         # Create the embedding input - up to MAX_WORDS in size
         # (with padding if not used), with embeddings at size of
@@ -86,37 +87,30 @@ class RNNReviewNetwork(nn.Module):
             embedding_dim=MAX_WORDS
         )
 
-        # Create the RNN network - HIDDEN_DIMENSION neurons wide
-        # for each hidden layer, for NUMBER_OF_LAYERS long. Input
-        # size is the max word size of the dataset
-        self.rnn1 = nn.RNN(
+        self.lstm = nn.LSTM(
             input_size = MAX_WORDS,
             hidden_size = HIDDEN_DIMENSION,
             num_layers = NUMBER_OF_LAYERS,
             batch_first = True
         )
-        self.rnn2 = nn.RNN(
-            input_size = HIDDEN_DIMENSION,
-            hidden_size = HIDDEN_DIMENSION,
-            num_layers = NUMBER_OF_LAYERS,
-            batch_first = True
-        )
-        # Final output layer is just a score 1-5, so we treat them as categories
-        self.linear = nn.Linear(HIDDEN_DIMENSION, 5)
+        self.fcl_1 = nn.Linear(HIDDEN_DIMENSION, 128)
+        self.fcl_2 = nn.Linear(128, 5)
+        self.reul = nn.ReLU()
 
-    def forward(self, batch):
-        embeddings = self.embedding_layer(batch)
-        output, hidden = self.rnn1(
-            embeddings,
-            torch.randn(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
-            # torch.zeros(NUMBER_OF_LAYERS, len(batch), HIDDEN_DIMENSION)
-        )
-        output, hidden = self.rnn2(output, hidden)
-        return self.linear(output[:,-1])
-        # output = self.linear(output).long()
-        # return output
+    def forward(self,x):
+        h_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)) #hidden state
+        c_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)) #internal state
+        # Propagate input through LSTM
+        output, (hn, cn) = self.lstm(x, (h_0, c_0)) #lstm with input, hidden, and internal state
+        hn = hn.view(-1, self.hidden_size) #reshaping the data for Dense layer next
+        out = self.relu(hn)
+        out = self.fc_1(out) #first Dense
+        out = self.relu(out) #relu
+        out = self.fc(out) #Final Output
+        return out
 
-review_model = RNNReviewNetwork()
+review_model = LTSMReviewNetwork()
+
 
 # Printing out our model
 for layer in review_model.children():
