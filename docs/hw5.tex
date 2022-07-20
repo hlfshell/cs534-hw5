@@ -48,8 +48,14 @@ For MFRL, we look towards more modern games - specifically success with Atari ga
 Now we'll discuss the differences between Passive Reinforcement Learning (PRL) and Active Reinforcement Learning (ARL). We'll again begin by clarifying some key differences between the two approaches.
 
 \begin{itemize}
-    \item 
+    \item In PRL, the agent is told what to do by its policy - hence \textit{passive}. The agent here is ultimately aiming to calculate the expected utility reward for a given state $s$.
+    \item In contrast, an active agent is aiming to learn the optimal policy, and thus must decide what to do at any given state $s$. To do this, it must balance approaching policies for exploitation (greedy) or exploration (often random, but could lead to improvement)
+    \item Changing the approach of a passive agent to include possible exploration can change a passive agent to an active one.
 \end{itemize}
+
+Active reinforcement learning is seen in Q-Learning - as for an example tihs repository of work I've completed in the past: \url{https://github.com/hlfshell/deep_q_network} - this project utilized a generic deep q architecture to solve numerous game-like environments, including direct image input through a convolutional neural network (CNN).
+
+For passive learning, an example would be an reinforcement learning powered vehicle. If the vehicle gets into a position where its optimal policy says to do a certain task (albeit with extra validation for safety to avoid incidents such as ramming pedestrians), it would be unsafe for an actual car in a public environment to decide to instead ignore the best decision and actively explore another option. This would result in vehicles occasionally veering into traffic, taking wrong turns, or other equally disasterous events.
 
 
 \section*{Problem 2}
@@ -193,5 +199,17 @@ With these documents, we will:
 \noindent ...and finally discuss whether or not these documents are similar from those findings.
 
 To see the code, please reference \textbf{problem\_2.py}. There we use Scikit Learn to calculate the TF-IDF vectors and cosine of similarity. With a cosine of similarity of $0.44$, these documents are somewhat similar.
+
+\section*{Problem 3}
+
+In Problem 3, we attempted to utilize PyTorch to create an RNN and LSTM neural network trained on a Kaggle provided dataset of Amazon reviews to find positive and negative sentiments.
+
+For this, we created $build_vocab.py$, which goes through the reviews and builds an embedded vocab of all the words utilized throughout the reviews. These embeddings are then utilized as index referencing a specific word.
+
+We then established the longest length of a review to act as our tensor size - any review that was shorter would be padded with 0's (no word) to be of equivalent size.
+
+From this we built out an RNN and LSTM model in problem\_3\_RNN.py and problem\_3\_LSTM.py, respectively.
+
+Unfortunately, an issue plagued me for hours - no matter what I did, my linear layers would always convert the network's output into the same values, resulting in a network that would never train. As such, I am submitting the work I have due to time constraints.
 
 \end{document}
